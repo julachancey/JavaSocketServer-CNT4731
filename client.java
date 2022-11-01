@@ -1,6 +1,7 @@
 // inspired by https://www.digitalocean.com/community/tutorials/java-socket-programming-server-client Java Socket Programming tutorial
 
 // imports ordered alphabetically
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -19,9 +20,16 @@ public class client {
         InetAddress juliaHost = InetAddress.getLocalHost();
 
         // create resources for server connection
-        Socket juliaSocket = null;
-        ObjectInputStream juliaInput = null;
+        Socket juliaSocket = new Socket(juliaHost.getHostName(), 4559);
+        ObjectInputStream juliaInput = new ObjectInputStream(juliaSocket.getInputStream());
         ObjectOutputStream juliaOutput = null;
+
+        // read server intro message
+        String juliaServerMessage = (String) juliaInput.readObject();
+        System.out.println(juliaServerMessage);
+
+        // close object streams
+        juliaInput.close();
 
         // create scanner to get user input
         Scanner juliaScanner = new Scanner(System.in);
@@ -35,7 +43,6 @@ public class client {
 
             // write to socket using juliaOutput
             juliaOutput = new ObjectOutputStream(juliaSocket.getOutputStream());
-            System.out.println("Sending request to Socket Server");
 
             // receive user input using scanner object
             String userInput = juliaScanner.nextLine();
@@ -44,10 +51,16 @@ public class client {
 
             // read server response message
             juliaInput = new ObjectInputStream(juliaSocket.getInputStream());
+            var juliaServerResponse = juliaInput.readObject();
 
-            String juliaServerMessage = (String) juliaInput.readObject();
-
-            System.out.println("Message from server: " + juliaServerMessage);
+            File juliaJpegFile;
+            try {
+                juliaJpegFile = (File) juliaServerResponse;
+                System.out.println(juliaJpegFile.getName());
+            } catch (Exception e) {
+                juliaServerMessage = (String) juliaServerResponse;
+                System.out.println(juliaServerMessage);
+            }
 
             // close object streams
             juliaInput.close();
@@ -59,7 +72,8 @@ public class client {
             if (userInput.equals("bye"))
                 exit = true;
         }
-
+        // close everything
+        juliaSocket.close();
         juliaScanner.close();
     }
 }

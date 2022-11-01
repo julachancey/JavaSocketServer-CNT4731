@@ -1,6 +1,7 @@
 // inspired by https://www.digitalocean.com/community/tutorials/java-socket-programming-server-client Java Socket Programming tutorial
 
 // imports ordered alphabetically
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -20,13 +21,26 @@ public class server {
         // create java socket server on port 4559
         juliaServer = new ServerSocket(juliaPort);
 
-        System.out.println("Hello!");
+        // create socket and wait for client connection
+        Socket juliaSocket = juliaServer.accept();
+
+        // create output stream object and write "Hello!" to juliaSocket
+        ObjectOutputStream juliaOutput = new ObjectOutputStream(juliaSocket.getOutputStream());
+        juliaOutput.writeObject("Hello!");
+
+        // close everything
+        juliaSocket.close();
+        juliaOutput.close();
+
+        // image files to send to client
+        File juliaJpegImage1 = new File("image1.jpg");
+        File juliaJpegImage2 = new File("image2.jpg");
+        File juliaJpegImage3 = new File("image3.jpg");
 
         // server continues running until user types the command "bye"
         while (true) {
-            System.out.println("Waiting for the client request");
             // create socket and wait for client connection
-            Socket juliaSocket = juliaServer.accept();
+            juliaSocket = juliaServer.accept();
 
             // read from socket into juliaInput
             ObjectInputStream juliaInput = new ObjectInputStream(juliaSocket.getInputStream());
@@ -34,12 +48,30 @@ public class server {
             // convert juliaInput that is a input stream object into a string
             String juliaClientMessage = (String) juliaInput.readObject();
 
-            System.out.println("Message received: " + juliaClientMessage);
+            System.out.println(juliaClientMessage);
 
-            // create output stream object and write juliaClientMessage to juliaSocket
-            ObjectOutputStream juliaOutput = new ObjectOutputStream(juliaSocket.getOutputStream());
+            // get output stream object
+            juliaOutput = new ObjectOutputStream(juliaSocket.getOutputStream());
 
-            juliaOutput.writeObject(juliaClientMessage);
+            // switch statements for client message
+            switch (juliaClientMessage) {
+                case "JPEG 1":
+                    juliaOutput.writeObject(juliaJpegImage1);
+                    break;
+                case "JPEG 2":
+                    juliaOutput.writeObject(juliaJpegImage2);
+                    break;
+                case "JPEG 3":
+                    juliaOutput.writeObject(juliaJpegImage3);
+                    break;
+                case "bye":
+                    // send disconnected message to client to indicate termination and exit
+                    juliaOutput.writeObject("disconnected");
+                    break;
+                default:
+                    juliaOutput.writeObject("Error! Command not found.");
+                    break;
+            }
 
             // close everything
             juliaSocket.close();
@@ -47,11 +79,9 @@ public class server {
             juliaOutput.close();
 
             // if user sends "bye" command, terminate the server and exit
-            if (juliaClientMessage.equalsIgnoreCase("bye"))
+            if (juliaClientMessage.equals("bye"))
                 break;
         }
-
-        System.out.println("Disconnecting");
 
         // close and terminate julia's server socket
         juliaServer.close();
