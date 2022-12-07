@@ -27,6 +27,7 @@ public class server {
         // create output stream object and write "Hello!" to juliaSocket
         ObjectOutputStream juliaOutput = new ObjectOutputStream(juliaSocket.getOutputStream());
         juliaOutput.writeObject("Hello!");
+        System.out.println("Hello!");
 
         // close everything
         juliaSocket.close();

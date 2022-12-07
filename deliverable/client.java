@@ -1,6 +1,9 @@
-// inspired by https://www.digitalocean.com/community/tutorials/java-socket-programming-server-client Java Socket Programming tutorial
+// pa2 inspired by https://www.digitalocean.com/community/tutorials/java-socket-programming-server-client Java Socket Programming tutorial
+// pa3 inspired by https://www.codespeedy.com/how-to-add-an-image-in-jframe/
 
 // imports ordered alphabetically
+import java.awt.Container;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -12,10 +15,14 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-// java socket client implementation for CNT 4731 - Programming Assignment 2
-public class client {
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+// java socket client implementation for CNT 4731 - Programming Assignment
+public class client extends JFrame{
     public static void main(String[] args)
-            throws UnknownHostException, IOException, ClassNotFoundException, InterruptedException {
+        throws UnknownHostException, IOException, ClassNotFoundException, InterruptedException {
         // get localhost IP address
         InetAddress juliaHost = InetAddress.getLocalHost();
 
@@ -36,6 +43,22 @@ public class client {
 
         boolean exit = false;
 
+        // create a JFrame to display images
+        JFrame frame = new JFrame();
+
+        // set default values for frame
+        frame.setTitle("Add Image");
+        // terminates default flow layout
+        frame.setLayout(null); 
+        // terminates program on close button
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // sets the position of the frame
+        // frame.setBounds(100, 200, 350, 300);
+
+         // gets the content layer
+        Container container = frame.getContentPane();
+        
+
         while (!exit) {
             // establish socket connection to server using port 4559 (last 4 digits of Julia
             // Chancey's ufid)
@@ -53,10 +76,27 @@ public class client {
             juliaInput = new ObjectInputStream(juliaSocket.getInputStream());
             var juliaServerResponse = juliaInput.readObject();
 
+            JLabel label = new JLabel();
+
             File juliaJpegFile;
             try {
                 juliaJpegFile = (File) juliaServerResponse;
                 System.out.println(juliaJpegFile.getName());
+
+                // sets the image to be displayed as an icon
+                label.setIcon(new ImageIcon(juliaJpegFile.getName()));
+
+                // gets the size of the image
+                Dimension size = label.getPreferredSize();
+
+                // sets the location of the image
+                label.setBounds(0, 0, size.width, size.height);
+                frame.setBounds(100, 200, size.width, size.height);
+
+                // adds objects to the container and exhibits the frame
+                container.add(label);
+                frame.setVisible(true);
+
             } catch (Exception e) {
                 juliaServerMessage = (String) juliaServerResponse;
                 System.out.println(juliaServerMessage);
